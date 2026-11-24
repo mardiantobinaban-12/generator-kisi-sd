@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generator Kisi-Kisi & Soal Ujian SD (Kop Dinas Resmi + AI + Word)</title>
+  <script src="https://tailwindcss.com"></script>
+  <!-- Library untuk Export ke Microsoft Word (.docx) -->
+  <script src="https://unpkg.com"></script>
+  <script src="https://cloudflare.com"></script>
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #ffffff !important; margin: 0; padding: 0; }
+      .print-container {
+        box-shadow: none !important;
+        border: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      table { page-break-inside: auto; }
+      tr { page-break-inside: avoid; page-break-after: auto; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans">
+
+  <!-- NAVBAR -->
+  <header class="bg-blue-700 text-white py-4 px-6 shadow no-print">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+      <div>
+        <h1 class="text-xl font-bold">Generator Kisi-Kisi & Soal Ujian SD (AI)</h1>
+        <p class="text-xs text-blue-100">Kop Surat Dinas Resmi • Multi-Bab Kurikulum Merdeka • Kisi-Kisi Landscape • Export Word</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button onclick="exportToWord()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-4 py-2 rounded-lg shadow text-sm flex items-center gap-2 transition">
+          📄 Unduh Word (.docx)
+        </button>
+        <button onclick="window.print()" class="bg-white text-blue-700 hover:bg-blue-50 font-semibold px-4 py-2 rounded-lg shadow text-sm flex items-center gap-2 transition">
+          🖨️ Cetak / PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
+
+    <!-- PANEL PENGATURAN -->
+    <section class="bg-white rounded-xl shadow p-6 space-y-6 no-print border border-slate-200">
+      
+      <!-- KONEKSI GEMINI API -->
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div class="flex-1">
+            <label class="block text-xs font-bold text-blue-900 mb-1">🔑 Google Gemini API Key (Disimpan aman di browser Anda)</label>
+            <input type="password" id="apiKeyInput" placeholder="Masukkan API Key AIzaSy..." onchange="saveApiKey()" class="w-full border border-blue-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none" />
+          </div>
+          <div class="text-xs text-blue-800 md:max-w-xs">
+            Dapatkan API Key gratis di <strong>Google AI Studio</strong> (://google.com) lalu tempel di kolom samping.
+          </div>
+        </div>
+      </div>
+
+      <!-- 1. PENGATURAN KOP SURAT DINAS & PENGESAHAN -->
+      <div>
+        <h2 class="text-base font-bold text-slate-700 border-b pb-2 mb-4">1. Pengaturan Kop Surat Dinas & Pengesahan Tanda Tangan</h2>
+        
+        <!-- Baris 1: Instansi & Nama Sekolah -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Pemerintah Kabupaten / Kota</label>
+            <input type="text" id="govName" value="PEMERINTAH KOTA PEKANBARU" oninput="updateHeader()" class="w-full border rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Dinas / Instansi</label>
+            <input type="text" id="deptName" value="DINAS PENDIDIKAN" oninput="updateHeader()" class="w-full border rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Satuan Pendidikan (Sekolah)</label>
+            <input type="text" id="schoolName" value="SD NEGERI 01 NUSANTARA" oninput="updateHeader()" class="w-full border rounded-lg px-3 py-2 text-sm" />
+          </div>
+        </div>
+
+        <!-- Baris 2: Alamat, NPSN/NSS, Kontak/Email -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Alamat Lengkap Sekolah</label>
+            <input type="text" id="schoolAddress" value="Jl. Pendidikan No. 10, Kec. Sukajadi, Kota Pekanbaru" oninput="updateHeader()" class="w-full border rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">NPSN / NSS / Kode Pos</label>
+            <input type="text" id="schoolNpsn" value="NPSN: 10401234 • Kode Pos: 28121" oninput="updateHeader()" class="w-full border rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Email / Website / Telp Sekolah</label>
+            <input type="text" id="schoolContact" value="Email: sdn01nusantara@sch.id • Telp: (0761) 123456" oninput="updateHeader()" class="w-full border rounded-lg px-3 py-2 text-sm" />
+          </div>
+        </div>
+
+        <!-- Baris 3: Upload Logo Kiri & Logo Kanan -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">🖼️ Logo Kiri (Logo Pemda / Tut Wuri Handayani)</label>
+            <div class="flex items-center gap-2">
+              <input type="file" id="logoLeftInput" accept="image/*" onchange="handleLogoUpload(event, 'left')" class="text-xs file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700" />
+              <button type="button" onclick="clearLogo('left')" class="text-xs text-red-600 hover:underline">Hapus</button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">🖼️ Logo Kanan (Logo Sekolah / Opsional)</label>
+            <div class="flex items-center gap-2">
+              <input type="file" id="logoRightInput" accept="image/*" onchange="handleLogoUpload(event, 'right')" class="text-xs file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700" />
+              <button type="button" onclick="clearLogo('right')" class="text-xs text-red-600 hover:underline">Hapus</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Baris 4: Jenis Ujian & Tahun Ajaran -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Judul / Jenis Ujian</label>
+            <input type="text" id="examTitle" value="SUMATIF AKHIR SEMESTER (SAS) GANJIL" oninput="updateHeader()" class="w-full border rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Tahun Ajaran</label>
+            <input type="text" id="academicYear" value="2026 / 2027" oninput="updateHeader()" class="w-full border rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Kota & Tanggal Pengesahan</label>
+            <input type="text" id="signPlaceDate" value="Pekanbaru, November 2026" oninput="updateHeader()" class="w-full border rounded-lg px-3 py-2 text-sm" />
+          </div>
+        </div>
+
+        <!-- Baris 5: Identitas Kepala Sekolah & Guru Penyusun -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Kepala Sekolah</label>
+            <input type="text" id="principalName" value="Drs. H. Ahmad Fauzi, M.Pd" oninput="updateHeader()" class="w-full border rounded-lg px-2.5 py-1.5 text-xs bg-white" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">NIP Kepala Sekolah</label>
+            <input type="text" id="principalNip" value="19680512 199203 1 004" oninput="updateHeader()" class="w-full border rounded-lg px-2.5 py-1.5 text-xs bg-white" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Guru Kelas / Mapel</label>
+            <input type="text" id="teacherName" value="Siti Rahmawati, S.Pd" oninput="updateHeader()" class="w-full border rounded-lg px-2.5 py-1.5 text-xs bg-white" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">NIP / NUPTK Guru</label>
+            <input type="text" id="teacherNip" value="19890817 201504 2 001" oninput="updateHeader()" class="w-full border rounded-lg px-2.5 py-1.5 text-xs bg-white" />
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. PENGATURAN KURIKULUM & PENGGABUNGAN MATERI -->
+      <div>
+        <h2 class="text-base font-bold text-slate-700 border-b pb-2 mb-4">2. Pengaturan Kelas, Mapel & Gabungan Ruang Lingkup Materi (Bab)</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Kelas</label>
+            <select id="gradeSelect" onchange="populateScopes()" class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
+              <option value="1">Kelas 1 SD</option>
+              <option value="2">Kelas 2 SD</option>
+              <option value="3">Kelas 3 SD</option>
+              <option value="4" selected>Kelas 4 SD</option>
